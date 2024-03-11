@@ -1,0 +1,15 @@
+hud.png
+size:256,64
+repeat:none
+diamond
+bounds:2,2,32,32
+live
+bounds:70,18,16,16
+progress
+bounds:36,2,32,32
+progressAfter
+bounds:125,26,32,32
+progressBefore
+bounds:91,26,32,32
+przycisk
+bounds:2,36,87,22

@@ -1,0 +1,35 @@
+{
+  "com.badlogic.gdx.graphics.Color": {
+    "white": {
+      "r": 1,
+      "g": 1,
+      "b": 1,
+      "a": 1
+    }
+  },
+  "com.badlogic.gdx.scenes.scene2d.ui.TextButton$TextButtonStyle": {
+    "normal": {
+      "font": "font_20",
+      "fontColor": "white"
+    },
+    "big": {
+      "font": "font_26",
+      "fontColor": "white"
+    },
+    "small": {
+      "font": "font_16",
+      "fontColor": "white"
+    },
+    "huge": {
+      "font": "font_32",
+      "fontColor": "white"
+    }
+  },
+    "com.badlogic.gdx.scenes.scene2d.ui.ProgressBar$ProgressBarStyle": {
+      "default": {
+        "background": "progressAfter",
+        "knob": "progress",
+        "knobBefore": "progressBefore"
+      }
+    }
+  }

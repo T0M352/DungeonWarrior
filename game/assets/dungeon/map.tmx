@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-up" width="200" height="200" tilewidth="16" tileheight="16" infinite="0" nextlayerid="6" nextobjectid="319">
+ <tileset firstgid="1" source="dungeon.tsx"/>
+ <layer id="1" name="Ground" width="200" height="200">
+  <data encoding="base64" compression="zlib">
+   eJztwwENAAAMw6BqmH+xt3ABkLBqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqPB+GV/Rc=
+  </data>
+ </layer>
+ <layer id="2" name="Dungeon" width="200" height="200">
+  <data encoding="base64" compression="zlib">
+   eJztwYEAAAAAw6D5U1/hAFUBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHwGcR4AAQ==
+  </data>
+ </layer>
+ <objectgroup color="#aa0000" id="3" name="Collision"/>
+ <objectgroup id="5" name="ObjectLayer">
+  <object id="317" gid="17" x="12" y="3166.13" width="16" height="16"/>
+  <object id="318" gid="19" x="34.125" y="3185.63" width="16" height="16">
+   <properties>
+    <property name="type" value="TABLE"/>
+   </properties>
+  </object>
+ </objectgroup>
+ <objectgroup id="4" name="PlayerStartLocation"/>
+</map>

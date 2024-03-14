@@ -6,6 +6,7 @@ import com.badlogic.ashley.systems.IteratingSystem;
 import com.tomesz.game.DungeonWarrior;
 import com.tomesz.game.ecs.ECSEngine;
 import com.tomesz.game.ecs.components.AnimationComponent;
+import com.tomesz.game.ecs.components.RemoveComponent;
 
 public class AnimationSystem extends IteratingSystem {
 
@@ -15,7 +16,11 @@ public class AnimationSystem extends IteratingSystem {
     @Override
     protected void processEntity(final Entity entity,final float v) {
        final AnimationComponent animationComponent = ECSEngine.animationComponentMapper.get(entity);
-       if(animationComponent.animationType != null){
+//       if(animationComponent.animationType != null){
+//           animationComponent.animationTime += v;
+//       }
+
+       if(animationComponent.isAnimationg){
            animationComponent.animationTime += v;
        }
     }

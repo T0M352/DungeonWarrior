@@ -47,7 +47,7 @@ public class MapPainter implements Disposable {
             wallDiagonalCornerUpLeft, backgroundTile, floorTile2, floorTile3, floorTile4, floorTile5;
     private TiledMapTile barrelTile, lampTile, boxTile, tableTile;
 
-    private HashMap<Vector2, String> decorationMap = new HashMap<>();
+    private HashMap<Vector2, GameObjectType> decorationMap = new HashMap<>();
 
 
     public MapPainter(DungeonWarrior context, TiledMap tiledMap) {
@@ -124,7 +124,7 @@ public class MapPainter implements Disposable {
 
         setPlayerSpawnPoint();
 
-        roomDungeonGenerator.dispose();
+
 
 
     }
@@ -134,20 +134,22 @@ public class MapPainter implements Disposable {
 
     }
 
-    public HashMap<Vector2, String> decorateDungeon() {
+    public HashMap<Vector2, GameObjectType> decorateDungeon() {
 //        generatedCorridors = roomDungeonGenerator.getCorridors();
 //        generatedRooms = roomDungeonGenerator.getRooms();
-        decorationMap = new HashMap<Vector2, String>();
+        decorationMap = new HashMap<Vector2, GameObjectType>();
         int maxTables;
         int maxBoxes;
         int maxBarrels;
         int maxDiamonds;
+        int maxLamps;
 
         for(Room room : generatedRooms){
             maxTables = 6;
             maxBoxes = 5;
             maxBarrels = 4;
             maxDiamonds = new Random().nextInt(3);
+            maxLamps = 4;
                 for(Vector2 floorPos : room.floors){
 
                     if(!generatedCorridors.contains(floorPos) && !generatedWalls.contains(floorPos)){
@@ -164,28 +166,35 @@ public class MapPainter implements Disposable {
                             if(neighboorWall){
                                 int random = new Random().nextInt(6);
                                 if(random == 2 && maxBarrels > 0 && checkForNeighborDec(floorPos, 0)){
-                                    decorationMap.put(new Vector2((int)floorPos.x,(int)floorPos.y), "BARREL");
+                                    decorationMap.put(new Vector2((int)floorPos.x,(int)floorPos.y), GameObjectType.BARREL);
                                     generatedDecoration.add(floorPos);
                                     maxBarrels--;
                                 }
 
-                                if(checkForLampsOnWall(floorPos)){
-                                    decorationMap.put(new Vector2((int)floorPos.x,(int)floorPos.y), "LAMP");
+                                if(checkForLampsOnWall(floorPos) && maxLamps > 0){
+                                    decorationMap.put(new Vector2((int)floorPos.x,(int)floorPos.y), GameObjectType.LAMP);
                                     generatedDecoration.add(floorPos);
+                                    maxLamps--;
                                 }
 
                             }else{
                                 int random = new Random().nextInt(30);
                                 if(random == 4 && maxBoxes > 0 && checkForNeighborDec(floorPos, 0)){
-                                    decorationMap.put(new Vector2((int)floorPos.x,(int)floorPos.y), "BOX");
+                                    decorationMap.put(new Vector2((int)floorPos.x,(int)floorPos.y), GameObjectType.BOX);
                                     generatedDecoration.add(floorPos);
                                     maxBoxes--;
                                 }else if(random == 2 && maxTables>0 && checkForNeighborDec(floorPos, 1)){
-                                    decorationMap.put(new Vector2((int)floorPos.x,(int)floorPos.y), "TABLE");
+                                    decorationMap.put(new Vector2((int)floorPos.x,(int)floorPos.y), GameObjectType.TABLE);
                                     generatedDecoration.add(floorPos);
+                                    generatedDecoration.add(new Vector2(floorPos.x + 1, floorPos.y));
+                                    maxTables--;
+                                }else if(random == 23 && maxTables>0 && checkForNeighborDec(floorPos, 1)){
+                                    decorationMap.put(new Vector2((int)floorPos.x,(int)floorPos.y), GameObjectType.TABLE_UP);
+                                    generatedDecoration.add(floorPos);
+                                    generatedDecoration.add(new Vector2(floorPos.x, floorPos.y + 1));
                                     maxTables--;
                                 }else if(random == 1 && maxDiamonds>0 && checkForNeighborDec(floorPos, 1)){
-                                    decorationMap.put(new Vector2((int)floorPos.x,(int)floorPos.y), "DIAMOND");
+                                    decorationMap.put(new Vector2((int)floorPos.x,(int)floorPos.y), GameObjectType.DIAMOND);
                                     generatedDecoration.add(floorPos);
                                     maxDiamonds--;
                                 }
@@ -194,11 +203,13 @@ public class MapPainter implements Disposable {
                         }
                     }
         }
-        decorationMap.put(getStairsLocation(), "STAIRS");
+        decorationMap.put(getStairsLocation(), GameObjectType.STAIRS);
         return decorationMap;
     }
 
     private boolean checkForLampsOnWall(Vector2 floorPos) {
+        if(generatedWalls.contains(floorPos))
+            return false;
         for (Vector2 pos : cardinalDirectionsList) {
             Vector2 positionToCheck = new Vector2(floorPos);
             for (int i = 0; i < 8; i++) {
@@ -206,7 +217,7 @@ public class MapPainter implements Disposable {
 //                    return false;
 
                 if(decorationMap.containsKey(positionToCheck))
-                    if(decorationMap.get(positionToCheck).equals("LAMP"))
+                    if(decorationMap.get(positionToCheck) == GameObjectType.LAMP)
                         return false;
 
                 positionToCheck.add(pos);
@@ -216,16 +227,21 @@ public class MapPainter implements Disposable {
     }
 
     private boolean checkForNeighborDec(Vector2 floorPos, int typeOfCheck) {
+        Vector2 neigPos;
+        Vector2 neigPos2;
+        if(decorationMap.containsKey(floorPos))
+            return false;
+
         if(typeOfCheck == 0){
             for(Vector2 dir : cardinalDirectionsList){
-                Vector2 neigPos = floorPos.add(dir);
+                neigPos = floorPos.add(dir);
                 if(generatedDecoration.contains(neigPos))
                     return false;
             }
         }else if(typeOfCheck == 1){
             for(Vector2 dir : cardinalDirectionsList){
-                Vector2 neigPos = floorPos.add(dir);
-                Vector2 neigPos2 = floorPos.add(dir).add(dir);
+                neigPos = floorPos.add(dir);
+                neigPos2 = neigPos.add(dir);
                 if(generatedDecoration.contains(neigPos) || generatedDecoration.contains(neigPos2)
                         || generatedWalls.contains(neigPos) || generatedWalls.contains(neigPos2)
                         ||generatedCorridors.contains(neigPos) || generatedCorridors.contains(neigPos2))
@@ -470,8 +486,41 @@ public class MapPainter implements Disposable {
         assetManager.dispose();
         map.dispose();
 
+        // Zwolnienie zasobów graficznych
+        floorTile.getTextureRegion().getTexture().dispose();
+        wallTop.getTextureRegion().getTexture().dispose();
+        wallSideRight.getTextureRegion().getTexture().dispose();
+        wallSideLeft.getTextureRegion().getTexture().dispose();
+        wallBottom.getTextureRegion().getTexture().dispose();
+        wallFull.getTextureRegion().getTexture().dispose();
+        wallInnerCornerDownLeft.getTextureRegion().getTexture().dispose();
+        wallInnerCornerDownRight.getTextureRegion().getTexture().dispose();
+        wallDiagonalCornerDownRight.getTextureRegion().getTexture().dispose();
+        wallDiagonalCornerDownLeft.getTextureRegion().getTexture().dispose();
+        wallDiagonalCornerUpRight.getTextureRegion().getTexture().dispose();
+        wallDiagonalCornerUpLeft.getTextureRegion().getTexture().dispose();
+        backgroundTile.getTextureRegion().getTexture().dispose();
+        floorTile2.getTextureRegion().getTexture().dispose();
+        floorTile3.getTextureRegion().getTexture().dispose();
+        floorTile4.getTextureRegion().getTexture().dispose();
+        floorTile5.getTextureRegion().getTexture().dispose();
+        barrelTile.getTextureRegion().getTexture().dispose();
+        lampTile.getTextureRegion().getTexture().dispose();
+        boxTile.getTextureRegion().getTexture().dispose();
+        tableTile.getTextureRegion().getTexture().dispose();
 
+        // Zwolnienie innych zasobów
+        disposeGeneratedDecoration();
+    }
 
+    private void disposeGeneratedDecoration() {
+        // Zwolnienie zasobów wygenerowanych dekoracji
+        for (Vector2 position : generatedDecoration) {
+            TiledMapTileLayer.Cell cell = layer.getCell((int) position.x, (int) position.y);
+            if (cell != null && cell.getTile() != null) {
+                cell.getTile().getTextureRegion().getTexture().dispose();
+            }
+        }
     }
 
     public static ArrayList<Vector2> cardinalDirectionsList = new ArrayList<Vector2>() {{

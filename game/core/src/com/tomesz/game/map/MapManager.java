@@ -25,6 +25,7 @@ import com.tomesz.game.screen.ScreenType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Objects;
 
 import static com.tomesz.game.DungeonWarrior.*;
 
@@ -41,7 +42,7 @@ public class MapManager {
     private MapPainter mapPainter;
     private final ECSEngine ecsEngine;
     private Array<Entity> gameObjectToRemove;
-    private HashMap<Vector2, String> decorationMap = new HashMap<Vector2,String>();
+    private HashMap<Vector2, GameObjectType> decorationMap = new HashMap<Vector2,GameObjectType>();
 
     private ImmutableArray<Entity> playerEntity;
 
@@ -100,7 +101,7 @@ public class MapManager {
 
     private void desroyGameObjects() {
         for(final Entity entity : ecsEngine.getEntities()){
-            if(ecsEngine.gameObjectMapper.get(entity) != null){
+            if(ECSEngine.gameObjectMapper.get(entity) != null){
                 gameObjectToRemove.add(entity);
             }
         }
@@ -117,36 +118,35 @@ public class MapManager {
         decorationMap = mapPainter.decorateDungeon();
         Sprite barrel = context.getAssetManager().get("mage/mage.atlas", TextureAtlas.class).createSprite("barrel");
         Sprite table = context.getAssetManager().get("mage/mage.atlas", TextureAtlas.class).createSprite("tableLong");//("table");
+        Sprite tableUp = context.getAssetManager().get("mage/mage.atlas", TextureAtlas.class).createSprite("tableUp");//("table");
         Sprite box = context.getAssetManager().get("mage/mage.atlas", TextureAtlas.class).createSprite("box");
         Sprite lamp = context.getAssetManager().get("mage/mage.atlas", TextureAtlas.class).createSprite("lamp");
         Sprite diamond = context.getAssetManager().get("mage/mage.atlas", TextureAtlas.class).createSprite("diamond");
         Sprite stairs = context.getAssetManager().get("mage/mage.atlas", TextureAtlas.class).createSprite("fireball01");
 
-        for (java.util.Map.Entry<Vector2, String> entry : decorationMap.entrySet()) {
+        for (java.util.Map.Entry<Vector2, GameObjectType> entry : decorationMap.entrySet()) {
             //Gdx.app.debug("MakeObjects", entry.getKey() + " " + entry.getValue());
             Vector2 position = new Vector2(entry.getKey().x / 2, entry.getKey().y / 2);
-            switch (entry.getValue()) {
-                case "BARREL":
-                    ecsEngine.createSampleObject(position, barrel, GameObjectType.BARREL, BIT_GAME_OBJECT);
-                    break;
-                case "LAMP":
-                    ecsEngine.createSampleObject(position, lamp, GameObjectType.LAMP, BIT_LIGHT_OBJECT);
-                    break;
-                case "BOX":
-                    ecsEngine.createSampleObject(position, box, GameObjectType.BOX, BIT_GAME_OBJECT);
-                    break;
-                case "TABLE":
-                    ecsEngine.createSampleObject(position, table, GameObjectType.TABLE, BIT_TABLE);
-                    break;
-                case "DIAMOND":
-                    ecsEngine.createSampleObject(position, diamond, GameObjectType.DIAMOND, BIT_LIGHT_OBJECT);
-                    break;
-                case "STAIRS":
-                    ecsEngine.createSampleObject(position, stairs, GameObjectType.STAIRS, BIT_GAME_OBJECT);
+//            if (Objects.requireNonNull(entry.getValue()) == "BARREL") {
+            if (entry.getValue() == GameObjectType.BARREL) {
+                ecsEngine.createSampleObject(position, barrel, GameObjectType.BARREL, BIT_DESTROYABLE);
+            } else if (entry.getValue() == GameObjectType.LAMP) {
+                ecsEngine.createSampleObject(position, lamp, GameObjectType.LAMP, BIT_LIGHT_OBJECT);
+            } else if (entry.getValue() == GameObjectType.BOX) {
+                ecsEngine.createSampleObject(position, box, GameObjectType.BOX, BIT_DESTROYABLE);
+            } else if (entry.getValue() == GameObjectType.TABLE) {
+                ecsEngine.createSampleObject(position, table, GameObjectType.TABLE, BIT_DESTROYABLE);
+            }else if (entry.getValue() == GameObjectType.TABLE_UP) {
+                ecsEngine.createSampleObject(position, tableUp, GameObjectType.TABLE_UP, BIT_DESTROYABLE);
+            } else if (entry.getValue() == GameObjectType.DIAMOND) {
+                ecsEngine.createSampleObject(position, diamond, GameObjectType.DIAMOND, BIT_GAME_OBJECT);
+            } else if (entry.getValue() == GameObjectType.STAIRS) {
+                ecsEngine.createSampleObject(position, stairs, GameObjectType.STAIRS, BIT_GAME_OBJECT);
 
-                default:
-                    Gdx.app.debug("MakeObjects", "Obiekt o nieobsługiwanym kluczu");
-                    break;
+
+                Gdx.app.debug("MakeObjects", "Obiekt o nieobsługiwanym kluczu");
+            } else {
+                Gdx.app.debug("MakeObjects", "Obiekt o nieobsługiwanym kluczu");
             }
         }
 

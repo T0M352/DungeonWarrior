@@ -57,15 +57,7 @@ public class GameScreen extends AbstractScreen<GameUI> implements MapListener {
 
     @Override
     public void render(float v) {
-        Vector3 mouseAtScreen = new Vector3(Gdx.input.getX(),  Gdx.input.getY(), 0);
-        Vector2 mouseAtWorld = getWorldPositionFromScreen(mouseAtScreen);
-//        Gdx.app.debug("MYSZ", "pozycja myszy w swiecie gry x: " + mouseAtWorld.x + " y: " + mouseAtWorld.y);
-    }
 
-    private Vector2 getWorldPositionFromScreen(Vector3 mouseAtScreen) {
-        OrthographicCamera orthographicCamera = context.getGameCamera();
-        Vector3 vc = orthographicCamera.unproject(new Vector3(mouseAtScreen.x,   mouseAtScreen.y, mouseAtScreen.z));
-        return new Vector2(vc.x, vc.y);
     }
 
 

@@ -17,9 +17,7 @@ public class LoadingScreen extends AbstractScreen<LoadingUI> {
         assetManager = context.getAssetManager();
         assetManager.load("mage/mage.atlas", TextureAtlas.class);
 
-        assetManager.load("dungeon/map.tmx", TiledMap.class); // TODO JEZELI ZDECYDUJESZ SIE NA TASOWANIE MAPAMI BEDZIESZ MUSIAL JE TUTAJ ZALADOWAC
-
-
+        assetManager.load("dungeon/map.tmx", TiledMap.class);
     }
 
     @Override

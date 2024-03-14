@@ -47,7 +47,8 @@ public class DungeonWarrior extends Game {
 	public static final short BIT_GROUND = 1<<1; // 2 bity w lewo w slowie binarnym
 	public static final short BIT_GAME_OBJECT = 1<<2;
 	public static final short BIT_LIGHT_OBJECT = 1<<3;
-	public static final short BIT_TABLE = 1<<4;
+	public static final short BIT_DESTROYABLE = 1<<4;
+	public static final short BIT_FIREBALL = 1<<5;
 	private World world;
 
 	private float acumulator;
@@ -72,6 +73,7 @@ public class DungeonWarrior extends Game {
 		return mapManager;
 	}
 	public static boolean newLevel = false;
+
 
 	@Override
 	public void create() {
@@ -124,7 +126,7 @@ public class DungeonWarrior extends Game {
 
 
 		screenCache = new EnumMap<ScreenType, AbstractScreen>(ScreenType.class);
-		setScreen(ScreenType.LOADING);
+		setScreen(ScreenType.MENU);
 
 
 	}

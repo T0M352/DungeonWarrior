@@ -11,17 +11,17 @@ import com.badlogic.gdx.utils.Disposable;
 import java.awt.*;
 import java.util.*;
 
-public class RoomDungeonGenerator implements Disposable {
-    private int minRoomWidth = 15;
-    private int minRoomHeight = 15;
-    private int dungeonWidth = 55;
-    private int dungeonHeight = 55;
-    private int offset = 4;
-    private boolean randomWalkRooms = false;
-    private Vector2 startPosition = new Vector2(0, 0);
+public class RoomDungeonGenerator{
+    private int minRoomWidth = 12;
+    private int minRoomHeight = 12;
+    private int dungeonWidth = 64;
+    private int dungeonHeight = 64;
+    private int offset = 2;
+    private boolean randomWalkRooms = false ;
+    private Vector2 startPosition = new Vector2(64, 64);
 
     //Random walk data
-    private int iterations = 20;
+    private int iterations = 50;
     private int walkLength = 30;
 
     private Vector2 spawnLocation;
@@ -217,6 +217,7 @@ public class RoomDungeonGenerator implements Disposable {
             HashSet<Vector2> path = simpleRandomWalk(currentPosition, walkLength);
             floorPositions.addAll(path);
         }
+        rooms.add(new Room(floorPositions, position));
         return floorPositions;
     }
 
@@ -243,9 +244,5 @@ public class RoomDungeonGenerator implements Disposable {
         return cardinalDirectionsList.get(new Random().nextInt(cardinalDirectionsList.size()));
     }
 
-    @Override
-    public void dispose() {
-
-    }
 }
 

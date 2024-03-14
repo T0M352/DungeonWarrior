@@ -9,11 +9,15 @@ public class GameObjectComponent  implements Component, Pool.Poolable {
     public GameObjectType type;
     public int animationIndex;
     public Sprite sprite;
+    public int health;
 
     @Override
     public void reset() {
         type = null;
         animationIndex = -1;
         sprite = null;
+        health = 10;
     }
+
+
 }

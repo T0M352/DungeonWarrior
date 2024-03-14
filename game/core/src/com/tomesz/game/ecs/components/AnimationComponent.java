@@ -7,6 +7,7 @@ import com.tomesz.game.view.AnimationType;
 public class AnimationComponent implements Component, Pool.Poolable {
     public AnimationType animationType;
     public float animationTime;
+    public boolean isAnimationg;
 
     public float width;
     public float height;
@@ -16,6 +17,7 @@ public class AnimationComponent implements Component, Pool.Poolable {
         animationTime = 0;
         animationType = null;
         width =height =0;
+        isAnimationg = false;
 
     }
 }

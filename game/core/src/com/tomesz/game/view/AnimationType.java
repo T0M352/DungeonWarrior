@@ -4,6 +4,10 @@ public enum AnimationType {
     MAGE_MOVE_LEFT("mage/mage.atlas", "mage_walk", 0.1f, 0),
     MAGE_MOVE_RIGHT("mage/mage.atlas", "mage_walk", 0.1f, 1),
     MAGE_IDLE("mage/mage.atlas", "mage_walk", 0.5f, 2),
+    BOX_END("mage/mage.atlas", "boxEnd", 0.1f, 0),
+    TABLE_END("mage/mage.atlas", "tableLongEnd", 0.1f, 0),
+    TABLEUP_END("mage/mage.atlas", "tableUpEnd", 0.1f, 0),
+    BARREL_END("mage/mage.atlas", "barrelEnd", 0.1f, 0),
     FIREBALL_END("mage/mage.atlas", "fireball_end", 0.1f, 0);
 
     private final String atlasPath;

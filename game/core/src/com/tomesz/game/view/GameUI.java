@@ -25,4 +25,9 @@ public class GameUI extends Table implements WorldContactListener.PlayerCollisio
         int diamondsCount = player.getComponent(PlayerComponent.class).getDiamonds();
         diamondsButton.setText("Diamonds: " + diamondsCount);
     }
+
+    public void refreshDiamonds(Entity player){
+        int diamondsCount = player.getComponent(PlayerComponent.class).getDiamonds();
+        diamondsButton.setText("Diamonds: " + diamondsCount);
+    }
 }

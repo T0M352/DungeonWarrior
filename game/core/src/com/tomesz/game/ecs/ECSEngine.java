@@ -5,21 +5,15 @@ import box2dLight.RayHandler;
 import com.badlogic.ashley.core.ComponentMapper;
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.PooledEngine;
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.BodyDef;
-import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
-import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.tomesz.game.DungeonWarrior;
 import com.tomesz.game.ecs.components.*;
 import com.tomesz.game.ecs.system.*;
-import com.tomesz.game.map.GameObject;
 import com.tomesz.game.map.GameObjectType;
 import com.tomesz.game.view.AnimationType;
 
@@ -80,12 +74,22 @@ public class ECSEngine extends PooledEngine {
         final AnimationComponent animationComponent = this.createComponent(AnimationComponent.class);
         animationComponent.animationType = null;
         if(type == GameObjectType.TABLE){
+            animationComponent.animationType = AnimationType.TABLE_END;
             animationComponent.width = 1f;
             animationComponent.height = 0.5f;
 
         }else if(type == GameObjectType.TABLE_UP){
+            animationComponent.animationType = AnimationType.TABLEUP_END;
             animationComponent.width = 0.5f;
             animationComponent.height = 1f;
+        }else if(type == GameObjectType.BARREL){
+            animationComponent.animationType = AnimationType.BARREL_END;
+            animationComponent.width = 0.5f;
+            animationComponent.height = 0.5f;
+        }else if(type == GameObjectType.BOX){
+            animationComponent.animationType = AnimationType.BOX_END;
+            animationComponent.width = 0.5f;
+            animationComponent.height = 0.5f;
         }else{
             animationComponent.width = 0.5f;
             animationComponent.height = 0.5f;
@@ -227,7 +231,7 @@ public class ECSEngine extends PooledEngine {
         return new Vector2(directionX, directionY);
     }
 
-    public void createPlayer(final Vector2 playerSpawnLocation){ //final float widht, final float heiight
+    public Entity createPlayer(final Vector2 playerSpawnLocation){ //final float widht, final float heiight
         final Entity player = this.createEntity();
 
         //komponenty
@@ -267,9 +271,10 @@ public class ECSEngine extends PooledEngine {
         animationComponent.animationType = AnimationType.MAGE_IDLE;
         animationComponent.width = 16 * UNIT_SCALE;
         animationComponent.height = 16 * UNIT_SCALE;
-        animationComponent.isAnimationg = true;
+        animationComponent.isAnimating = true;
         player.add(animationComponent);
         this.addEntity(player);
+        return player;
     }
 
 

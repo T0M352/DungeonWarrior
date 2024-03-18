@@ -1,5 +1,6 @@
 package com.tomesz.game.screen;
 
+import com.badlogic.ashley.core.Entity;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.assets.AssetManager;
@@ -14,6 +15,7 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.sun.org.apache.xpath.internal.operations.Or;
 import com.tomesz.game.DungeonWarrior;
+import com.tomesz.game.PreferenceManager;
 import com.tomesz.game.input.GameKeys;
 import com.tomesz.game.input.InputManager;
 import com.tomesz.game.map.CollisionArea;
@@ -32,6 +34,9 @@ public class GameScreen extends AbstractScreen<GameUI> implements MapListener {
 
     private final MapManager mapManager;
 
+    private final PreferenceManager preferenceManager;
+    private final Entity player;
+
 
     java.util.Map<CollisionArea, Body> mapOfCollision;
     public GameScreen(final DungeonWarrior context) {
@@ -41,9 +46,13 @@ public class GameScreen extends AbstractScreen<GameUI> implements MapListener {
         mapManager.addListener(this);
         mapManager.setupMap();
 
+        preferenceManager = context.getPreferenceManager();
 
-        context.getEcsEngine().createPlayer(new Vector2(mapManager.getCurrentMap().getStartLocation()));
 
+        player = context.getEcsEngine().createPlayer(new Vector2(mapManager.getCurrentMap().getStartLocation()));
+        if(context.loadGame){
+            preferenceManager.loadGameState(player);
+        }
 
 
     }
@@ -57,6 +66,17 @@ public class GameScreen extends AbstractScreen<GameUI> implements MapListener {
 
     @Override
     public void render(float v) {
+        if(Gdx.input.isKeyJustPressed(Input.Keys.Z)){
+            preferenceManager.saveGameState(player, context.getMapManager());
+        }
+        if(Gdx.input.isKeyJustPressed(Input.Keys.X)){
+            preferenceManager.loadGameState(player);
+            screenUI.refreshDiamonds(player);
+        }
+
+
+
+
 
     }
 

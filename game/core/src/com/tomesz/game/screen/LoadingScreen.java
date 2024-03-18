@@ -18,6 +18,8 @@ public class LoadingScreen extends AbstractScreen<LoadingUI> {
         assetManager.load("mage/mage.atlas", TextureAtlas.class);
 
         assetManager.load("dungeon/map.tmx", TiledMap.class);
+
+
     }
 
     @Override

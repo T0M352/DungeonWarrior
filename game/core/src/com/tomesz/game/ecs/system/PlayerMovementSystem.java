@@ -30,6 +30,7 @@ public class PlayerMovementSystem extends IteratingSystem implements InputListen
     private int yFactor;
     private  final DungeonWarrior context;
     Sprite fireball;
+    private Entity player;
     public PlayerMovementSystem(final DungeonWarrior context) {
         super(Family.all(PlayerComponent.class, B2DComponent.class).get());
         this.context = context;
@@ -42,9 +43,12 @@ public class PlayerMovementSystem extends IteratingSystem implements InputListen
     protected void processEntity(final Entity entity,final float v) {
         //entity.getComponent(PlayerComponent.class); wolny sposob
 
-
+            if(player == null){
+                player = entity;
+            }
         //if(directionChange)
         //{
+
             final PlayerComponent playerComponent =  ECSEngine.playerCmpMapper.get(entity);
             final B2DComponent b2DComponent = ECSEngine.b2DComponentCmpMapper.get(entity);
         //    directionChange = false;
@@ -125,8 +129,10 @@ public class PlayerMovementSystem extends IteratingSystem implements InputListen
                 break;
             case BACK:
                 if(context.getScreen().getClass() == GameScreen.class){
+                    context.getPreferenceManager().saveGameState(player, context.getMapManager());
                     context.setScreen(ScreenType.MENU_IN_GAME);
                 }else if(context.getScreen().getClass() == MenuInGame.class){
+//                    context.getPreferenceManager().loadGameState(player);  TODO JEZELI CHCESZ NIEAKTYWNA PAUZE
                     context.setScreen(ScreenType.GAME);
                 }
                 break;

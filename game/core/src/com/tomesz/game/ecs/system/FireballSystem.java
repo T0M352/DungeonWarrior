@@ -3,8 +3,6 @@ package com.tomesz.game.ecs.system;
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.Family;
 import com.badlogic.ashley.systems.IteratingSystem;
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.tomesz.game.DungeonWarrior;
@@ -31,7 +29,7 @@ public class FireballSystem extends IteratingSystem implements WorldContactListe
         Vector2 direction = fireballComponent.getDirection();
         float xFactor = direction.x;
         float yFactor = direction.y;
-        if(!animationComponent.isAnimationg){
+        if(!animationComponent.isAnimating){
             b2DComponent.body.applyLinearImpulse(
                     (xFactor * 4 - b2DComponent.body.getLinearVelocity().x) * b2DComponent.body.getMass(),
                     (yFactor * 4 - b2DComponent.body.getLinearVelocity().y) * b2DComponent.body.getMass(),
@@ -62,19 +60,24 @@ public class FireballSystem extends IteratingSystem implements WorldContactListe
         //fireball.add(new RemoveComponent());
         final GameObjectComponent gameObjectComponent = ECSEngine.gameObjectMapper.get(contact);
         final AnimationComponent animationComponent = ECSEngine.animationComponentMapper.get(fireball);
+        final AnimationComponent contactAnimationComponent = ECSEngine.animationComponentMapper.get(contact);
         gameObjectComponent.health -= 5; //TODO TUTAJ WSTAW ATAK GRACZA
-        animationComponent.isAnimationg = true;
+        animationComponent.isAnimating = true;
         if(gameObjectComponent.health <= 0){
-            contact.add(((ECSEngine)getEngine()).createComponent(RemoveComponent.class));
+            contactAnimationComponent.isAnimating = true;
         }
         startOfAnimation = animationComponent.animationTime;
+
+
+
+
     }
 
     @Override
     public void FireballCollisionWithGround(Entity fireball) {
         final AnimationComponent animationComponent = ECSEngine.animationComponentMapper.get(fireball);
         final FireballComponent fireballComponent = ECSEngine.fireballObjectMaper.get(fireball);
-        animationComponent.isAnimationg = true;
+        animationComponent.isAnimating = true;
         startOfAnimation = animationComponent.animationTime;
 
 

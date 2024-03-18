@@ -17,8 +17,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.IntMap;
-
-import java.awt.*;
+import com.tomesz.game.DungeonWarrior;
 
 import static com.tomesz.game.DungeonWarrior.UNIT_SCALE;
 
@@ -42,7 +41,9 @@ public class Map {
         return mapAnimation;
     }
 
-    public Map(final TiledMap tiledMap){
+
+
+    public Map(final TiledMap tiledMap, DungeonWarrior context){
         this.tiledMap = tiledMap;
         collisionAreas = new Array<CollisionArea>();
         startLocation = new Vector2();
@@ -50,13 +51,12 @@ public class Map {
         gameObjects = new Array<GameObject>();
 
         //
-
         parseCollisionLayer();
         parsePlayerStartLocation();
-        createAnimation(71, tiledMap.getTileSets().getTile(71));
-        //parseGameObjectLayer();
+
 
     }
+
 
     private void parseGameObjectLayer() {
         final MapLayer gameObjectLayer = tiledMap.getLayers().get("ObjectLayer");

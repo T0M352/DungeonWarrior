@@ -31,6 +31,7 @@ import com.tomesz.game.screen.ScreenType;
 import com.tomesz.game.view.GameRenderer;
 
 import java.util.EnumMap;
+import java.util.HashSet;
 
 public class DungeonWarrior extends Game {
 	public static final String TAG = DungeonWarrior.class.getSimpleName();
@@ -74,6 +75,13 @@ public class DungeonWarrior extends Game {
 	}
 	public static boolean newLevel = false;
 
+	private PreferenceManager preferenceManager;
+
+	public static HashSet<Vector2> generatedMap;
+
+	public boolean loadGame = false;
+
+
 
 	@Override
 	public void create() {
@@ -114,6 +122,7 @@ public class DungeonWarrior extends Game {
 
 		gameCamera = new OrthographicCamera();
 		screenViewport = new FitViewport(16, 9, gameCamera);
+//		screenViewport = new FitViewport(80, 45, gameCamera);
 
 
 
@@ -124,11 +133,15 @@ public class DungeonWarrior extends Game {
 
 		gameRenderer = new GameRenderer(this);
 
-
+		preferenceManager = new PreferenceManager(this);
 		screenCache = new EnumMap<ScreenType, AbstractScreen>(ScreenType.class);
 		setScreen(ScreenType.MENU);
 
 
+	}
+
+	public PreferenceManager getPreferenceManager() {
+		return preferenceManager;
 	}
 
 	public static void resetBodiesAndFixtureDefinitions(){

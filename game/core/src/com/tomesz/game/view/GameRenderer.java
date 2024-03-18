@@ -15,8 +15,6 @@ import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.*;
@@ -26,14 +24,11 @@ import com.tomesz.game.ecs.ECSEngine;
 import com.tomesz.game.ecs.components.AnimationComponent;
 import com.tomesz.game.ecs.components.B2DComponent;
 import com.tomesz.game.ecs.components.GameObjectComponent;
-import com.tomesz.game.map.GameObjectType;
 import com.tomesz.game.map.Map;
 import com.tomesz.game.map.MapListener;
-import com.tomesz.game.screen.GameScreen;
 
 import java.util.EnumMap;
 
-import static com.tomesz.game.DungeonWarrior.BIT_GAME_OBJECT;
 import static com.tomesz.game.DungeonWarrior.UNIT_SCALE;
 
 public class GameRenderer implements Disposable, MapListener {
@@ -159,7 +154,7 @@ public class GameRenderer implements Disposable, MapListener {
         final AnimationComponent animationComponent = ECSEngine.animationComponentMapper.get(entity);
         final GameObjectComponent gameObjectComponent = ECSEngine.gameObjectMapper.get(entity);
         //if(b2DComponent != null && animationComponent != null && gameObjectComponent != null){
-        if(!animationComponent.isAnimationg){
+        if(!animationComponent.isAnimating){
             final Sprite frame = new Sprite();//animation.getKeyFrame(animationComponent.animationTime);
             frame.set(gameObjectComponent.sprite);
             frame.setBounds(b2DComponent.renderPosition.x, b2DComponent.renderPosition.y, animationComponent.width, animationComponent.height); //JEZELI TRZEBA PRZESUNAC SPRITE TO TUTAJ
@@ -216,7 +211,14 @@ public class GameRenderer implements Disposable, MapListener {
             if(textureRegions == null){
                 Gdx.app.debug("ANIMATION", "TWORZYMY REGION O TYPIE " + animationType.getAtlasKey());
                 final TextureAtlas.AtlasRegion region = assetManager.get(animationType.getAtlasPath(), TextureAtlas.class).findRegion(animationType.getAtlasKey());
-                textureRegions = region.split(16, 16);
+                if(animationType == AnimationType.TABLEUP_END){
+                    textureRegions = region.split(16, 32);
+                }else if(animationType == AnimationType.TABLE_END){
+                    textureRegions = region.split(32, 16);
+                }else{
+                    textureRegions = region.split(16, 16);
+                }
+
                 regionCache.put(animationType.getAtlasKey(), textureRegions);
             }
             animation = new Animation<Sprite>(animationType.getFrameTime(), getKeyFrames(textureRegions[animationType.getRowIndex()]));

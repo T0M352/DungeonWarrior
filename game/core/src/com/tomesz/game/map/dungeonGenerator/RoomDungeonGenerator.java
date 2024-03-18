@@ -18,7 +18,7 @@ public class RoomDungeonGenerator{
     private int dungeonHeight = 64;
     private int offset = 2;
     private boolean randomWalkRooms = false ;
-    private Vector2 startPosition = new Vector2(64, 64);
+    private Vector2 startPosition = new Vector2(0, 0);
 
     //Random walk data
     private int iterations = 50;

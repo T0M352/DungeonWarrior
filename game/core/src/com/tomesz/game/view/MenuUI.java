@@ -40,7 +40,13 @@ public class MenuUI extends Table {
         newGame.addListener(new InputListener(){
             @Override
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-                context.setScreen(ScreenType.LOADING);
+                if(type == ScreenType.MENU_IN_GAME){
+                    context.getMapManager().resetMap();
+                    context.setScreen(ScreenType.GAME);
+                }else{
+                    context.setScreen(ScreenType.LOADING);
+                }
+
                 return true;
             }
         });
@@ -48,11 +54,13 @@ public class MenuUI extends Table {
             @Override
             public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
                 newGame.getLabel().setColor(1, 0, 0, 1);
+                newGame.getLabel().setFontScale(1.3f);
             }
 
             @Override
             public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
                 newGame.getLabel().setColor(1, 1, 1, 1);
+                newGame.getLabel().setFontScale(1);
             }
         });
 
@@ -66,6 +74,9 @@ public class MenuUI extends Table {
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
                 if(type == ScreenType.MENU_IN_GAME){
                     context.setScreen(ScreenType.GAME);
+                }else if(type == ScreenType.MENU){
+                    context.loadGame = true;
+                    context.setScreen(ScreenType.LOADING);
                 }
                 return true;
             }
@@ -75,11 +86,13 @@ public class MenuUI extends Table {
             @Override
             public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
                 continueBtn.getLabel().setColor(1, 0, 0, 1);
+                continueBtn.getLabel().setFontScale(1.3f);
             }
 
             @Override
             public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
                 continueBtn.getLabel().setColor(1, 1, 1, 1);
+                continueBtn.getLabel().setFontScale(1);
             }
         });
 
@@ -106,11 +119,13 @@ public class MenuUI extends Table {
             @Override
             public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
                 fullScreen.getLabel().setColor(1, 0, 0, 1);
+                fullScreen.getLabel().setFontScale(1.3f);
             }
 
             @Override
             public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
                 fullScreen.getLabel().setColor(1, 1, 1, 1);
+                fullScreen.getLabel().setFontScale(1);
             }
         });
 
@@ -130,11 +145,13 @@ public class MenuUI extends Table {
             @Override
             public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
                 exit.getLabel().setColor(1, 0, 0, 1);
+                exit.getLabel().setFontScale(1.3f);
             }
 
             @Override
             public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
                 exit.getLabel().setColor(1, 1, 1, 1);
+                exit.getLabel().setFontScale(1);
             }
         });
 

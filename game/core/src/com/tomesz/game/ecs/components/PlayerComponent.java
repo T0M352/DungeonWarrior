@@ -16,6 +16,10 @@ public class PlayerComponent implements Component, Pool.Poolable {
 
     @Override
     public void reset() {
-        //tutaj resetujesz wlasciwosci do podstawowych
+        diamonds = 0;
+    }
+
+    public void setDiamonds(int diamonds) {
+        PlayerComponent.diamonds = diamonds;
     }
 }

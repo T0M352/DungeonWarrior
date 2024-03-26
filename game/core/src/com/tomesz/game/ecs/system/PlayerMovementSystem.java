@@ -7,6 +7,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.tomesz.game.DungeonWarrior;
@@ -22,8 +23,9 @@ import com.tomesz.game.screen.MenuInGame;
 import com.tomesz.game.screen.ScreenType;
 
 import static com.tomesz.game.DungeonWarrior.BIT_GAME_OBJECT;
+import static com.tomesz.game.DungeonWarrior.bodyDef;
 
-public class PlayerMovementSystem extends IteratingSystem implements InputListener {
+public class PlayerMovementSystem extends IteratingSystem implements InputListener{
     private boolean directionChange;
     private boolean shoot;
     private int xFactor;
@@ -31,6 +33,10 @@ public class PlayerMovementSystem extends IteratingSystem implements InputListen
     private  final DungeonWarrior context;
     Sprite fireball;
     private Entity player;
+
+    private float colorTimer;
+
+
     public PlayerMovementSystem(final DungeonWarrior context) {
         super(Family.all(PlayerComponent.class, B2DComponent.class).get());
         this.context = context;
@@ -41,17 +47,14 @@ public class PlayerMovementSystem extends IteratingSystem implements InputListen
 
     @Override
     protected void processEntity(final Entity entity,final float v) {
-        //entity.getComponent(PlayerComponent.class); wolny sposob
 
             if(player == null){
                 player = entity;
             }
-        //if(directionChange)
-        //{
 
             final PlayerComponent playerComponent =  ECSEngine.playerCmpMapper.get(entity);
             final B2DComponent b2DComponent = ECSEngine.b2DComponentCmpMapper.get(entity);
-        //    directionChange = false;
+
             b2DComponent.body.applyLinearImpulse(
                     (xFactor * 2 - b2DComponent.body.getLinearVelocity().x) * b2DComponent.body.getMass(),
                     (yFactor * 2 - b2DComponent.body.getLinearVelocity().y) * b2DComponent.body.getMass(),
@@ -60,24 +63,44 @@ public class PlayerMovementSystem extends IteratingSystem implements InputListen
 
 
 
-        //}
         if(shoot){
             if(fireball == null){
                 fireball = context.getAssetManager().get("mage/mage.atlas", TextureAtlas.class).createSprite("fireball01");
-
             }
             Vector3 mouseAtScreen = new Vector3(Gdx.input.getX(),  Gdx.input.getY(), 0);
             Vector2 mouseAtWorld = getWorldPositionFromScreen(mouseAtScreen);
             Vector2 dir = new Vector2(mouseAtWorld.x - 0.125f, mouseAtWorld.y - 0.125f);
+
+
             Vector2 playerLocation = b2DComponent.body.getPosition();
-            context.getEcsEngine().createFireball(playerLocation, dir, fireball);
+            context.getEcsEngine().createFireball(playerLocation, dir, fireball, playerComponent.accuracy);
+//            context.getEcsEngine().createFireball(dir, new Vector2(dir.x+1, dir.y+1), fireball);
             shoot = false;
         }
-        if(Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) { //do poprawienia
+
+
+        if(Gdx.input.isButtonJustPressed(Input.Buttons.LEFT) && playerComponent.mana > 5) { //do poprawienia
+            playerComponent.mana -=5;
+            if(playerComponent.mana < 0){
+                playerComponent.mana = 0;
+            }
             shoot = true;
         }
 
+        if(playerComponent.health <= 0){
+            context.setScreen(ScreenType.DEATH_SCREEN);
+            context.getMapManager().resetMap();
+            playerComponent.health = 100;
+            playerComponent.mana = 100;
+            playerComponent.setDiamonds(0);
+        }
+
     }
+
+
+
+
+
 
     private Vector2 getWorldPositionFromScreen(Vector3 v) {
         Vector3 vc = context.getGameCamera().unproject(new Vector3(v.x,   v.y, v.z));

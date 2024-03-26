@@ -17,6 +17,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.IntMap;
 import com.badlogic.gdx.utils.ObjectMap;
@@ -24,12 +25,15 @@ import com.badlogic.gdx.utils.reflect.ClassReflection;
 import com.badlogic.gdx.utils.reflect.ReflectionException;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.tomesz.game.ecs.ECSEngine;
+import com.tomesz.game.ecs.components.PlayerComponent;
 import com.tomesz.game.input.InputManager;
 import com.tomesz.game.map.MapManager;
 import com.tomesz.game.screen.AbstractScreen;
+import com.tomesz.game.screen.GameScreen;
 import com.tomesz.game.screen.ScreenType;
 import com.tomesz.game.view.GameRenderer;
 
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashSet;
 
@@ -50,6 +54,9 @@ public class DungeonWarrior extends Game {
 	public static final short BIT_LIGHT_OBJECT = 1<<3;
 	public static final short BIT_DESTROYABLE = 1<<4;
 	public static final short BIT_FIREBALL = 1<<5;
+	public static final short BIT_ENEMY = 1<<6;
+	public static final short BIT_ENEMY_FIREBALL = 1<<7;
+	public static final short BIT_ENTRANCE = 1<<8;
 	private World world;
 
 	private float acumulator;
@@ -83,6 +90,10 @@ public class DungeonWarrior extends Game {
 
 
 
+
+
+
+
 	@Override
 	public void create() {
 		Gdx.app.setLogLevel(Application.LOG_DEBUG);
@@ -98,12 +109,10 @@ public class DungeonWarrior extends Game {
 		world.setContactListener(worldContactListener);
 		rayHandler = new RayHandler(world);
 		rayHandler.setAmbientLight(0, 0, 0, 0.4f);
-		Light.setGlobalContactFilter(BIT_PLAYER, (short) 1, BIT_GROUND); //SWIATLO GRACZA DAJE CIEN TYLKO PRZY GROUND
-		Light.setGlobalContactFilter(BIT_PLAYER, (short) 1, BIT_GAME_OBJECT);
+		Light.setGlobalContactFilter(BIT_PLAYER, (short) 1, (short)(BIT_GROUND | BIT_GAME_OBJECT)); //SWIATLO GRACZA DAJE CIEN TYLKO PRZY GROUND
 
-		Light.setGlobalContactFilter(BIT_LIGHT_OBJECT, (short) 1, BIT_GROUND);
-		Light.setGlobalContactFilter(BIT_LIGHT_OBJECT, (short) 1, BIT_GAME_OBJECT);
-		Light.setGlobalContactFilter(BIT_LIGHT_OBJECT, (short) 1, BIT_PLAYER);
+		Light.setGlobalContactFilter(BIT_LIGHT_OBJECT, (short) 1, (short)(BIT_GROUND | BIT_PLAYER | BIT_GAME_OBJECT | BIT_ENEMY));
+
 
 
 
@@ -159,7 +168,9 @@ public class DungeonWarrior extends Game {
 		fixtureDef.shape = null;
 	}
 
-
+	public GameRenderer getGameRenderer() {
+		return gameRenderer;
+	}
 
 	public ECSEngine getEcsEngine() {
 		return ecsEngine;
@@ -285,12 +296,42 @@ public class DungeonWarrior extends Game {
 			mapManager.resetMap();
 		}
 
+
+
 		gameRenderer.render(acumulator/FIXED_TIME_STEP);
 		//final float alpha = acumulator / FIXED_TIME_STEP;
 		stage.getViewport().apply();
 		stage.act(deltaTime);
 		stage.draw();
 	}
+
+	public static ArrayList<Vector2> cardinalDirectionsList = new ArrayList<Vector2>() {{
+		add(new Vector2(0, 1));  // góra
+		add(new Vector2(1, 0));  // prawo
+		add(new Vector2(0, -1)); // dół
+		add(new Vector2(-1, 0)); // lewo
+	}};
+
+	public static ArrayList<Vector2> diagonalDiretionList = new ArrayList<Vector2>() {{
+		add(new Vector2(1, 1));
+		add(new Vector2(1, -1));
+		add(new Vector2(-1, -1));
+		add(new Vector2(-1, 1));
+	}};
+
+	public static ArrayList<Vector2> eightDiretionsList = new ArrayList<Vector2>() {{
+		add(new Vector2(0, 1));  // gora
+		add(new Vector2(1, 1));  // gora - prawo
+		add(new Vector2(1, 0)); // prawo
+		add(new Vector2(1, -1)); // dół - prawo
+		add(new Vector2(0, -1));  // dol
+		add(new Vector2(-1, -1));  // dół - lewo
+		add(new Vector2(-1, 0)); // lewo
+		add(new Vector2(-1, 1)); // gora - lewo
+	}};
+
+
+
 
 	public RayHandler getRayHandler() {
 		return rayHandler;

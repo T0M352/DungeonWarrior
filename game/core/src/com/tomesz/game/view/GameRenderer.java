@@ -21,11 +21,11 @@ import com.badlogic.gdx.utils.*;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.tomesz.game.DungeonWarrior;
 import com.tomesz.game.ecs.ECSEngine;
-import com.tomesz.game.ecs.components.AnimationComponent;
-import com.tomesz.game.ecs.components.B2DComponent;
-import com.tomesz.game.ecs.components.GameObjectComponent;
+import com.tomesz.game.ecs.components.*;
+import com.tomesz.game.ecs.system.EnemySystem;
 import com.tomesz.game.map.Map;
 import com.tomesz.game.map.MapListener;
+import com.tomesz.game.screen.GameScreen;
 
 import java.util.EnumMap;
 
@@ -40,6 +40,7 @@ public class GameRenderer implements Disposable, MapListener {
 
     private final EnumMap<AnimationType, Animation<Sprite>> animationCache;
     private final ImmutableArray<Entity> animatedEntities;
+    private final ImmutableArray<Entity> legAnimatedEntities;
 
     private final FitViewport  fitViewport;
 
@@ -52,6 +53,7 @@ public class GameRenderer implements Disposable, MapListener {
     public Sprite testSprite;
 
     private ImmutableArray<Entity> gameObjectEntities;
+    private ImmutableArray<Entity> playerEntities;
     private IntMap<Animation<Sprite>> mapAnimation;
 
     private final DungeonWarrior context;
@@ -59,6 +61,10 @@ public class GameRenderer implements Disposable, MapListener {
     private ObjectMap<String, TextureRegion[][]> regionCache;
 
     private final RayHandler rayHandler;
+
+    private float colorTimer = -1;
+
+
 
     public GameRenderer(final DungeonWarrior context) {
         this.context = context;
@@ -76,7 +82,8 @@ public class GameRenderer implements Disposable, MapListener {
 
         animatedEntities = context.getEcsEngine().getEntitiesFor(Family.all(AnimationComponent.class, B2DComponent.class).exclude(GameObjectComponent.class).get()); //tablica ktora wylapuje kazde entity majace komonent animacji i box2d
 
-
+        legAnimatedEntities = context.getEcsEngine().getEntitiesFor(Family.all(LegAnimationComponent.class).get());
+        playerEntities = context.getEcsEngine().getEntitiesFor(Family.all(PlayerComponent.class).get());
 
         mapRenderer = new OrthogonalTiledMapRenderer(null, UNIT_SCALE, spriteBatch);
         context.getMapManager().addListener(this);
@@ -87,6 +94,7 @@ public class GameRenderer implements Disposable, MapListener {
 
         glProfiler = new GLProfiler(Gdx.graphics);
         glProfiler.disable(); //RYSOWANIE GRAFIKI
+//        glProfiler.enable(); //RYSOWANIE GRAFIKI
         if(glProfiler.isEnabled()){
             box2DDebugRenderer = new Box2DDebugRenderer();
             world = context.getWorld();
@@ -127,14 +135,19 @@ public class GameRenderer implements Disposable, MapListener {
             }
 
 
-
         for(final Entity entity : animatedEntities){
             renderEntity(entity, alpha);
+        }
+
+        for(final Entity entity : legAnimatedEntities){
+            renderLegs(entity, alpha);
         }
 
         if(Gdx.input.isKeyJustPressed(Input.Keys.K)){
             context.getMapManager().resetMap();
         }
+
+
         spriteBatch.end();
 
         rayHandler.setCombinedMatrix(gameCamera);
@@ -145,8 +158,31 @@ public class GameRenderer implements Disposable, MapListener {
             box2DDebugRenderer.render(world, gameCamera.combined);
         }
 
+        if(colorTimer != -1){
+            colorTimer += alpha;
+            if(colorTimer > 1.5f){
+                playerEntities.get(0).getComponent(B2DComponent.class).lightFluctuationDistance = 0f;
+                playerEntities.get(0).getComponent(B2DComponent.class).light.setColor(0,0,0,0.45f);
+            }
+        }
+
+
     }
 
+
+
+    private void renderLegs(Entity entity, float alpha) {
+        final B2DComponent b2DComponent = ECSEngine.b2DComponentCmpMapper.get(entity);
+        final LegAnimationComponent animationComponent = ECSEngine.legAnimComponentMapper.get(entity);
+
+        if(animationComponent.animationType != null){
+            final Animation<Sprite> animation= getAnimation(animationComponent.animationType, animationComponent.oneFrameResolution);
+            final Sprite frame = animation.getKeyFrame(animationComponent.animationTime);
+            frame.setBounds(b2DComponent.renderPosition.x-0.2f, b2DComponent.renderPosition.y-0.2f, animationComponent.width, animationComponent.height); //JEZELI TRZEBA PRZESUNAC SPRITE TO TUTAJ
+            frame.draw(spriteBatch);
+        }
+        b2DComponent.renderPosition.lerp(b2DComponent.body.getPosition(), alpha);
+    }
 
 
     private void renderGameObject(Entity entity, float alpha) {
@@ -177,7 +213,7 @@ public class GameRenderer implements Disposable, MapListener {
         final AnimationComponent animationComponent = ECSEngine.animationComponentMapper.get(entity);
 
         if(animationComponent.animationType != null){
-           final Animation<Sprite> animation= getAnimation(animationComponent.animationType);
+           final Animation<Sprite> animation= getAnimation(animationComponent.animationType, animationComponent.oneFrameResolution);
            final Sprite frame = animation.getKeyFrame(animationComponent.animationTime);
            frame.setBounds(b2DComponent.renderPosition.x-0.2f, b2DComponent.renderPosition.y-0.2f, animationComponent.width, animationComponent.height); //JEZELI TRZEBA PRZESUNAC SPRITE TO TUTAJ
            frame.draw(spriteBatch);
@@ -185,7 +221,7 @@ public class GameRenderer implements Disposable, MapListener {
         b2DComponent.renderPosition.lerp(b2DComponent.body.getPosition(), alpha);
     }
 
-    private Animation<Sprite> getAnimation(AnimationType animationType) {
+    private Animation<Sprite> getAnimation(AnimationType animationType, int oneFrameResolution) {
         Animation<Sprite> animation = animationCache.get(animationType);
         if(animation == null){
             Gdx.app.debug("ANIMATION", "TWORZYMY ANIMACJE O TYPIE " + animationType);
@@ -193,7 +229,7 @@ public class GameRenderer implements Disposable, MapListener {
             if(textureRegions == null){
                 Gdx.app.debug("ANIMATION", "TWORZYMY REGION O TYPIE " + animationType.getAtlasKey());
                 final TextureAtlas.AtlasRegion region = assetManager.get(animationType.getAtlasPath(), TextureAtlas.class).findRegion(animationType.getAtlasKey());
-                textureRegions = region.split(48, 48);
+                textureRegions = region.split(oneFrameResolution, oneFrameResolution);
                 regionCache.put(animationType.getAtlasKey(), textureRegions);
             }
             animation = new Animation<Sprite>(animationType.getFrameTime(), getKeyFrames(textureRegions[animationType.getRowIndex()]));

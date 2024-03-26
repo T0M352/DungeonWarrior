@@ -13,7 +13,7 @@ public class FireballComponent implements Component, Pool.Poolable{
     }
 
     public Vector2 getDirection() {
-        return direction;
+        return new Vector2(direction.x, direction.y);
     }
 
     public void setDirection(Vector2 direction) {

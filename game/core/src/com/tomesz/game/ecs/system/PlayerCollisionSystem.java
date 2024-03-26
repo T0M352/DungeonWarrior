@@ -11,6 +11,7 @@ import com.tomesz.game.ecs.components.GameObjectComponent;
 import com.tomesz.game.ecs.components.PlayerComponent;
 import com.tomesz.game.ecs.components.RemoveComponent;
 import com.tomesz.game.map.GameObjectType;
+import com.tomesz.game.screen.GameScreen;
 
 public class PlayerCollisionSystem extends IteratingSystem implements WorldContactListener.PlayerCollisionListener {
 
@@ -32,6 +33,7 @@ public class PlayerCollisionSystem extends IteratingSystem implements WorldConta
         if(gameObjectComponent.type == GameObjectType.DIAMOND){
             gameObject.add(((ECSEngine)getEngine()).createComponent(RemoveComponent.class));
             player.getComponent(PlayerComponent.class).addDiamond();
+            player.getComponent(PlayerComponent.class).health += 10;
         }
         if(gameObjectComponent.type == GameObjectType.STAIRS){
             DungeonWarrior.newLevel = true;

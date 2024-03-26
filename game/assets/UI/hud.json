@@ -28,7 +28,7 @@
     "com.badlogic.gdx.scenes.scene2d.ui.ProgressBar$ProgressBarStyle": {
       "default": {
         "background": "progressAfter",
-        "knob": "progress",
+
         "knobBefore": "progressBefore"
       }
     }

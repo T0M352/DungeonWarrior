@@ -34,6 +34,8 @@ public class PreferenceManager implements Json.Serializable {
 
     private final Vector2 playerPos;
     private int diamonds;
+    private int mana;
+    private int health;
 
 //    private HashSet<Vector2> savedDungeon;
     private Array<Point> savedDungeon;
@@ -77,7 +79,8 @@ public class PreferenceManager implements Json.Serializable {
 
         //diamenty gracza
         diamonds = ECSEngine.playerCmpMapper.get(player).getDiamonds();
-
+        mana = (int)ECSEngine.playerCmpMapper.get(player).mana;
+        health = (int)ECSEngine.playerCmpMapper.get(player).health;
         //mapa
         savedDungeon = mapManager.getRooms();
         savedCorridors = mapManager.getGeneratedCorridors();
@@ -136,6 +139,9 @@ public class PreferenceManager implements Json.Serializable {
         //diamenty
         PlayerComponent playerComponent = ECSEngine.playerCmpMapper.get(player);
         playerComponent.setDiamonds(savedJsonString.getInt("DIAMONDS_COUNT",  0));
+        playerComponent.mana=savedJsonString.getInt("SAVED_MANA",  0);
+        playerComponent.health=savedJsonString.getInt("SAVED_HP",  0);
+
 
         //mapa
         HashSet<Vector2> SavedDungeon = new HashSet<Vector2>();
@@ -174,6 +180,8 @@ public class PreferenceManager implements Json.Serializable {
         json.writeValue("SAVED_DUNGEON", savedDungeon);
         json.writeValue("SAVED_CORRIDORS", savedCorridors);
         json.writeValue("SAVED_DECORATION", decorationMapAsString);
+        json.writeValue("SAVED_MANA", mana);
+        json.writeValue("SAVED_HP", health);
     }
 
     @Override

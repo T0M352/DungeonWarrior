@@ -8,6 +8,7 @@ public class AnimationComponent implements Component, Pool.Poolable {
     public AnimationType animationType;
     public float animationTime;
     public boolean isAnimating;
+    public int oneFrameResolution;
 
     public float width;
     public float height;
@@ -18,6 +19,7 @@ public class AnimationComponent implements Component, Pool.Poolable {
         animationType = null;
         width =height =0;
         isAnimating = false;
+        oneFrameResolution = 0;
 
     }
 }

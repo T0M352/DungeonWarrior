@@ -150,6 +150,7 @@ public class RoomDungeonGenerator{
 
     private HashSet<Vector2> createSimpleRooms(ArrayList<Rectangle> roomList) {
         HashSet<Vector2> floor = new HashSet<>();
+        int id = 0;
         for (Rectangle room : roomList) {
             HashSet<Vector2> roomSet = new HashSet<Vector2>();
             for (int col = offset; col < room.width - offset; col++) {
@@ -159,7 +160,7 @@ public class RoomDungeonGenerator{
                     floor.add(position);
                 }
             }
-            rooms.add(new Room(roomSet, new Vector2((float)room.getCenterX(), (float)room.getCenterY())));
+            rooms.add(new Room(roomSet, new Vector2((float)room.getCenterX(), (float)room.getCenterY()), id++));
         }
         return floor;
     }

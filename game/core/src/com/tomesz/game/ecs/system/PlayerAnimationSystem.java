@@ -19,6 +19,7 @@ public class PlayerAnimationSystem extends IteratingSystem {
     protected void processEntity(final Entity entity, final float v) {
         final B2DComponent b2DComponent = ECSEngine.b2DComponentCmpMapper.get(entity);
         final AnimationComponent animationComponent = ECSEngine.animationComponentMapper.get(entity);
+        final PlayerComponent playerComponent = ECSEngine.playerCmpMapper.get(entity);
         if(b2DComponent.body.getLinearVelocity().equals(Vector2.Zero)){
             animationComponent.animationType = AnimationType.MAGE_IDLE;
         } else if(b2DComponent.body.getLinearVelocity().x < 0){
@@ -27,6 +28,17 @@ public class PlayerAnimationSystem extends IteratingSystem {
             animationComponent.animationType = AnimationType.MAGE_MOVE_RIGHT;
         }
 
+        //optymalizacja zeby wiecznie nie zwiekszac
+        if(playerComponent.markDamageTimer < 1){
+            playerComponent.markDamageTimer+=v;
+        }
+        if(playerComponent.markDamageTimer > 0.8f){
+            b2DComponent.lightDistance = 0;
+            b2DComponent.lightFluctuationDistance = 0;
+        }
+
 
     }
+
+
 }

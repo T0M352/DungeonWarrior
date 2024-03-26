@@ -20,9 +20,11 @@ import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.ChainShape;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.ArrayMap;
 import com.tomesz.game.DungeonWarrior;
 import com.tomesz.game.ecs.ECSEngine;
 import com.tomesz.game.ecs.components.B2DComponent;
+import com.tomesz.game.ecs.components.GameObjectComponent;
 import com.tomesz.game.ecs.components.PlayerComponent;
 import com.tomesz.game.ecs.components.RemoveComponent;
 import com.tomesz.game.map.dungeonGenerator.Room;
@@ -31,6 +33,7 @@ import com.tomesz.game.map.dungeonGenerator.WallByteTypes;
 
 import java.awt.*;
 import java.util.*;
+import java.util.List;
 
 import static com.tomesz.game.DungeonWarrior.*;
 
@@ -48,6 +51,7 @@ public class MapManager {
     private final ECSEngine ecsEngine;
     private Array<Entity> gameObjectToRemove;
     private HashMap<Vector2, String> decorationMap = new HashMap<Vector2,String>();
+    private HashMap<Vector2, String> enemiesMap = new HashMap<Vector2,String>();
 
     private TiledMapTileLayer layerGround;
 
@@ -69,10 +73,20 @@ public class MapManager {
 
     private HashSet<Vector2> generatedWalls; //sciany
     private HashSet<Vector2> generatedDecoration; //sciany
+    private HashSet<Vector2> generatedEnemiesPos; //sciany
     private ArrayList<Room> generatedRooms; //sciany
     private ArrayList<Vector2> generatedCorridors; //scieżka;
 
     private Array<Point> rooms;
+
+    private Sprite barrel, table, tableUp, box, lamp, diamond, stairs;
+
+    private HashMap<Vector2, Integer> roomCollisionMap;
+
+    private final PathFinder pathFinder;
+
+    public boolean createPatch = true;
+
 
     public MapManager(DungeonWarrior context) {
         currentMap = null;
@@ -87,8 +101,10 @@ public class MapManager {
         playerEntity = ecsEngine.getEntitiesFor(Family.all(PlayerComponent.class).get());
         roomDungeonGenerator = new RoomDungeonGenerator();
         generatedDecoration = new HashSet<Vector2>();
+        generatedEnemiesPos = new HashSet<Vector2>();
         rooms = new Array<Point>();
-
+        roomCollisionMap = new HashMap<Vector2,Integer>();
+        pathFinder = new PathFinder();
     }
 
     public void addListener(final MapListener listener){
@@ -148,18 +164,210 @@ public class MapManager {
 
 
         makeCollisionAreas();
+
         makeObjects();
 
 
+        //TESTY
+        spawnEnemies();
+
+
+        makeEntrances();
+
+
+
+        for(Vector2 pos : generatedDungeon){
+            if(generatedDecoration.contains(pos)){
+                roomCollisionMap.put(new Vector2((int)pos.x, (int)pos.y), 1);
+            }else{
+                roomCollisionMap.put(new Vector2((int)pos.x, (int)pos.y), 0);
+            }
+        }
+//        for (java.util.Map.Entry<Vector2, Integer> entry : roomCollisionMap.entrySet()) {
+//            if(entry.getValue() == 1){
+//                layer.setCell((int)entry.getKey().x, (int)entry.getKey().y, null);
+//            }
+//        }
+
+
+        //testy
 
         for(final MapListener listener: listeners){
             listener.mapChange(currentMap);
         }
     }
 
+    private void makeEntrances() {
+        boolean twoCor = false;
+        boolean oneRoom = false;
+        Vector2 neigPos;
+        Vector2 neigPos2;
+        Vector2 neigPos3;
+        Vector2 neigPos4;
+        Vector2 result;
+        for(Room room : generatedRooms){
+            if(!room.playerStartRoom){
+
+
+
+
+                for(Vector2 v: room.floors){
+                    neigPos = new Vector2(v.x, v.y).add(1,0);
+                    neigPos2 = new Vector2(v.x, v.y).add(-1,0);
+                    neigPos3 = new Vector2(v.x, v.y).add(0,1);
+                    neigPos4 = new Vector2(v.x, v.y).add(0,-1);
+                    result = new Vector2(v.x, v.y);
+                    if(generatedCorridors.contains(neigPos) && generatedCorridors.contains(neigPos2) && !room.floors.contains(neigPos)){
+//                        result.add(1,0); // LEWY
+//                    deleteTile(result);
+                        ecsEngine.createDungeonEntrance(new Vector2(result.x/2, result.y/2), room.minX, room.minY, room.maxX, room.maxY, room.id, 0);
+                    }
+
+                    if(generatedCorridors.contains(neigPos) && generatedCorridors.contains(neigPos2) && !room.floors.contains(neigPos2)){
+//                        result.add(-1,0); //prawy
+//                    deleteTile(result);
+                        ecsEngine.createDungeonEntrance(new Vector2(result.x/2, result.y/2), room.minX, room.minY, room.maxX, room.maxY, room.id, 1);
+
+                    }
+
+                    if(generatedCorridors.contains(neigPos3) && generatedCorridors.contains(neigPos4) && !room.floors.contains(neigPos3)){
+//                        result.add(0,1);
+//                    deleteTile(result);  //dol
+                        ecsEngine.createDungeonEntrance(new Vector2(result.x/2, result.y/2), room.minX, room.minY, room.maxX, room.maxY, room.id, 2);
+
+                    }
+//
+                    if(generatedCorridors.contains(neigPos3) && generatedCorridors.contains(neigPos4) && !room.floors.contains(neigPos4)){
+//                        result.add(0,-1);  //gora
+//                    deleteTile(result);
+                        ecsEngine.createDungeonEntrance(new Vector2(result.x/2, result.y/2), room.minX, room.minY, room.maxX, room.maxY, room.id, 3);
+
+                    }
+                }
+            }
+
+        }
+    }
+
+
+    public void createPath(Vector2 position) {
+
+        Vector2 startPos = new Vector2((int) (playerEntity.get(0).getComponent(B2DComponent.class).body.getPosition().x * 2), (int) (playerEntity.get(0).getComponent(B2DComponent.class).body.getPosition().y * 2));
+        Vector2 endPos = new Vector2((int) (position.x * 2), (int) (position.y * 2));
+        HashMap<Vector2, Integer> map = new HashMap<Vector2, Integer>();
+        Array<Body> bodies = new Array<Body>();
+        world.getBodies(bodies);
+        for (Point pos : rooms) {
+            map.put(new Vector2(pos.x, pos.y), 0);
+        }
+        for (Body body : bodies) {
+            if (body.getUserData() instanceof Entity) {
+                Entity gameObject = (Entity) body.getUserData();
+                if (gameObject.getComponent(GameObjectComponent.class) != null) {
+                    GameObjectComponent gameObjectComponent = ECSEngine.gameObjectMapper.get(gameObject);
+                    if (gameObjectComponent.type != GameObjectType.LAMP) {
+                        if (gameObjectComponent.type == GameObjectType.TABLE) {
+                            map.replace(new Vector2((int) gameObjectComponent.position.x, (int) gameObjectComponent.position.y), 0, 1);
+                            map.replace(new Vector2((int) gameObjectComponent.position.x + 1, (int) gameObjectComponent.position.y), 0, 1);
+                        } else if (gameObjectComponent.type == GameObjectType.TABLE_UP) {
+
+                            map.replace(new Vector2((int) gameObjectComponent.position.x, (int) gameObjectComponent.position.y), 0, 1);
+                            map.replace(new Vector2((int) gameObjectComponent.position.x, (int) gameObjectComponent.position.y + 1), 0, 1);
+                        } else {
+                            map.replace(new Vector2((int) gameObjectComponent.position.x, (int) gameObjectComponent.position.y), 0, 1);
+
+                        }
+                    }
+                }
+            }
+        }
+        List<Vector2> path = pathFinder.findPath(startPos, endPos, map);
+        for (Vector2 pos : path) {
+            layer.setCell((int) pos.x,(int) pos.y, null);
+        }
+
+    }
+
+    public void deleteTile(Vector2 position){
+        if(position!= null){
+            layer.setCell((int)position.x, (int) position.y, null);
+            layerCollision.setCell((int)position.x, (int) position.y, null);
+        }
+
+
+    }
+
+    public void repaintDung(){
+        for(Vector2 v: generatedDungeon){
+            TiledMapTileLayer.Cell newCell = new TiledMapTileLayer.Cell();
+            newCell.setTile(floorTile);
+            paintSingleTile(layer, newCell, v);
+        }
+    }
+
+
     public Array<Point> getRooms() {
         return rooms;
     }
+
+    private HashMap<Vector2, String> createEnemiesOnMap() {
+        enemiesMap = new HashMap<Vector2, String>();
+        int maxMele;
+        int maxDist;
+
+//        for(Vector2 ve : generatedDecoration){
+//            deleteTile(ve);
+//        }
+//
+//        for(Vector2 ve : generatedWalls){
+//            deleteTile(ve);
+//        }
+
+
+        for(Room room : roomDungeonGenerator.getRooms()){
+            if(!room.playerStartRoom){
+                maxMele = 4 + new Random().nextInt(4);
+                maxDist = 2 + new Random().nextInt(2);
+                for(Vector2 floorPos : room.floors) {
+                    boolean neigWall = false;
+                    if(!generatedCorridors.contains(floorPos) && !generatedWalls.contains(floorPos) && !generatedDecoration.contains(floorPos)){
+                        Vector2 neig = new Vector2(floorPos.x, floorPos.y);
+                        Vector2 neig2 = new Vector2(floorPos.x, floorPos.y);
+                        Vector2 neig3 = new Vector2(floorPos.x, floorPos.y);
+                        Vector2 neig4 = new Vector2(floorPos.x, floorPos.y);
+                        neig.add(1, 0);
+                        neig2.add(0, 1);
+                        neig3.add(-1, 0);
+                        neig4.add(0, -1);
+                        if(generatedWalls.contains(neig) || generatedWalls.contains(neig2) || generatedWalls.contains(neig3) || generatedWalls.contains(neig4)){
+                            neigWall = true;
+                        }
+                        if(generatedDecoration.contains(neig) || generatedDecoration.contains(neig2) || generatedDecoration.contains(neig3) || generatedDecoration.contains(neig4)){
+                            neigWall = true;
+                        }
+
+                        if(!neigWall){
+                            int random = new Random().nextInt(12);
+                            if(random == 4 && maxMele > 0){
+                                maxMele--;
+                                enemiesMap.put(floorPos, "kobold");
+                                generatedEnemiesPos.add(floorPos);
+                            }else if(random == 8 && maxDist > 0){
+                                maxDist--;
+                                enemiesMap.put(floorPos, "shaman");
+                                generatedEnemiesPos.add(floorPos);
+                            }
+                        }
+
+                    }
+                }
+
+            }
+        }
+
+        return enemiesMap;
+    }
+
 
     public HashMap<Vector2, String> decorateDungeon() {
 //        generatedCorridors = roomDungeonGenerator.getCorridors();
@@ -234,28 +442,7 @@ public class MapManager {
         return decorationMap;
     }
 
-    public void testClearMap(int type){
-        if(type == 0){
-            for(Vector2 v : generatedDungeon){
-                layer.setCell((int)v.x, (int)v.y, null);
-                Gdx.app.debug("PIERWSZA KOLEKCJA", "X: " + v.x + ", Y:" + v.y);
-            }
-        }else if(type == 1){
-            for(Vector2 v : generatedDungeon){
-                TiledMapTileLayer.Cell newCell = new TiledMapTileLayer.Cell();
-                newCell.setTile(wallInnerCornerDownLeft);
-                layer.setCell((int)v.x, (int)v.y, newCell);
-                Gdx.app.debug("DRUGA KOLEKCJA", "X: " + v.x + ", Y:" + v.y);
-            }
-        }else if(type == 2){
-            for(Point v : rooms){
-                layer.setCell((int)v.x, (int)v.y, null);
-            }
-        }
 
-
-
-    }
 
     public Vector2 getStairsLocation() {
         return generatedRooms.get(generatedRooms.size()-1).center;
@@ -514,7 +701,7 @@ public class MapManager {
         }
     }
 
-    private void makeCollisionObject(Vector2 position) {
+    public void makeCollisionObject(Vector2 position) {
         int tileSize = layer.getTileHeight();
         int rectX = (int)(position.x * tileSize);
         int rectY = (int)(position.y * tileSize);
@@ -526,30 +713,10 @@ public class MapManager {
 
     }
 
-    public static ArrayList<Vector2> cardinalDirectionsList = new ArrayList<Vector2>() {{
-        add(new Vector2(0, 1));  // góra
-        add(new Vector2(1, 0));  // prawo
-        add(new Vector2(0, -1)); // dół
-        add(new Vector2(-1, 0)); // lewo
-    }};
+    public void makeTestRectangle(RectangleMapObject rectangleMapObject){
+        layerObjectCollision.getObjects().add(rectangleMapObject);
+    }
 
-    public static ArrayList<Vector2> diagonalDiretionList = new ArrayList<Vector2>() {{
-        add(new Vector2(1, 1));
-        add(new Vector2(1, -1));
-        add(new Vector2(-1, -1));
-        add(new Vector2(-1, 1));
-    }};
-
-    public static ArrayList<Vector2> eightDiretionsList = new ArrayList<Vector2>() {{
-        add(new Vector2(0, 1));  // gora
-        add(new Vector2(1, 1));  // gora - prawo
-        add(new Vector2(1, 0)); // prawo
-        add(new Vector2(1, -1)); // dół - prawo
-        add(new Vector2(0, -1));  // dol
-        add(new Vector2(-1, -1));  // dół - lewo
-        add(new Vector2(-1, 0)); // lewo
-        add(new Vector2(-1, 1)); // gora - lewo
-    }};
 
     private void paintSingleTile(TiledMapTileLayer layer, TiledMapTileLayer.Cell cell, Vector2 position){
         layer.setCell((int)position.x, (int)position.y, cell);
@@ -567,15 +734,22 @@ public class MapManager {
         gameObjectToRemove.clear();
     }
 
+    public Sprite getBox() {
+        return box;
+    }
+
     private void makeObjects() {
         decorationMap = decorateDungeon();
-        Sprite barrel = context.getAssetManager().get("mage/mage.atlas", TextureAtlas.class).createSprite("barrel");
-        Sprite table = context.getAssetManager().get("mage/mage.atlas", TextureAtlas.class).createSprite("tableLong");//("table");
-        Sprite tableUp = context.getAssetManager().get("mage/mage.atlas", TextureAtlas.class).createSprite("tableUp");//("table");
-        Sprite box = context.getAssetManager().get("mage/mage.atlas", TextureAtlas.class).createSprite("box");
-        Sprite lamp = context.getAssetManager().get("mage/mage.atlas", TextureAtlas.class).createSprite("lamp");
-        Sprite diamond = context.getAssetManager().get("mage/mage.atlas", TextureAtlas.class).createSprite("diamond");
-        Sprite stairs = context.getAssetManager().get("mage/mage.atlas", TextureAtlas.class).createSprite("fireball01");
+        if(barrel == null || table == null || tableUp == null || box == null || lamp == null || diamond == null || stairs == null){
+            barrel = context.getAssetManager().get("mage/mage.atlas", TextureAtlas.class).createSprite("barrel");
+            table = context.getAssetManager().get("mage/mage.atlas", TextureAtlas.class).createSprite("tableLong");//("table");
+            tableUp = context.getAssetManager().get("mage/mage.atlas", TextureAtlas.class).createSprite("tableUp");//("table");
+            box = context.getAssetManager().get("mage/mage.atlas", TextureAtlas.class).createSprite("box");
+            lamp = context.getAssetManager().get("mage/mage.atlas", TextureAtlas.class).createSprite("lamp");
+            diamond = context.getAssetManager().get("mage/mage.atlas", TextureAtlas.class).createSprite("diamond");
+            stairs = context.getAssetManager().get("mage/mage.atlas", TextureAtlas.class).createSprite("fireball03");
+
+        }
 
         for (java.util.Map.Entry<Vector2, String> entry : decorationMap.entrySet()) {
             //Gdx.app.debug("MakeObjects", entry.getKey() + " " + entry.getValue());
@@ -608,10 +782,31 @@ public class MapManager {
                     break;
             }
         }
-
-
-
     }
+
+    private void spawnEnemies() {
+        enemiesMap = createEnemiesOnMap();
+        for (java.util.Map.Entry<Vector2, String> entry : enemiesMap.entrySet()) {
+            //Gdx.app.debug("MakeObjects", entry.getKey() + " " + entry.getValue());
+            Vector2 position = new Vector2(entry.getKey().x / 2, entry.getKey().y / 2);
+//            if (Objects.requireNonNull(entry.getValue()) == "BARREL") {
+            switch (entry.getValue()) {
+                case "kobold":
+                    ecsEngine.createEnemy(position);
+//                    context.getMapManager().deleteTile(entry.getKey());
+                    break;
+                case "shaman":
+                    ecsEngine.createDistEnemy(position);
+//                    context.getMapManager().deleteTile(entry.getKey());
+                    break;
+                default:
+                    Gdx.app.debug("MakeObjects", "Obiekt o nieobsługiwanym kluczu");
+                    break;
+            }
+        }
+    }
+
+
 
     private void destroyCollisionAreas() {
         Array<Body> list = new Array<>();
@@ -700,6 +895,8 @@ public class MapManager {
         decorateDungeon();
         makeObjects();
         makeCollisionAreas();
+        spawnEnemies();
+        makeEntrances();
     }
 
     public void loadMap(HashSet<Vector2> savedDungeon, ArrayList<Vector2> savedCorridors, HashMap<Vector2, String> decorationMap){

@@ -11,9 +11,13 @@ import static com.tomesz.game.DungeonWarrior.*;
 public class WorldContactListener implements ContactListener {
     private final Array<PlayerCollisionListener> listeners;
     private final Array<FireballCollisionListener> fireballListeners;
+    private final Array<EnemyFireballCollisionListener> enemyFireballCollisionListeners;
+    private final Array<EntranceCollisionListener> entranceCollisionListeners;
     public WorldContactListener(){
         listeners = new Array<PlayerCollisionListener>();
         fireballListeners = new Array<FireballCollisionListener>();
+        enemyFireballCollisionListeners = new Array<EnemyFireballCollisionListener>();
+        entranceCollisionListeners = new Array<EntranceCollisionListener>();
     }
     public void addPlayerCollisionListener(final PlayerCollisionListener listener){
         listeners.add(listener);
@@ -21,20 +25,32 @@ public class WorldContactListener implements ContactListener {
     public void addFireballCollisionListener(final FireballCollisionListener listener){
         fireballListeners.add(listener);
     }
+
+    public void addEntranceCollisionListener(final EntranceCollisionListener listener){
+        entranceCollisionListeners.add(listener);
+    }
+
+    public void addFireballCollisionListener(final EnemyFireballCollisionListener listener){
+        enemyFireballCollisionListeners.add(listener);
+    }
+
+
     @Override
     public void beginContact(Contact contact) {
         Entity player = null;
         Entity fireball = null;
+        Entity enemyFireball = null;
         Entity gameObject = null;
+        Entity entrance = null;
         final Body bodyA = contact.getFixtureA().getBody();
         final Body bodyB = contact.getFixtureB().getBody();
         final int catFixA = contact.getFixtureA().getFilterData().categoryBits;
         final int catFixB = contact.getFixtureB().getFilterData().categoryBits;
 
 
-        if ((catFixA & (BIT_PLAYER | BIT_FIREBALL)) == 0 && (catFixB & (BIT_PLAYER | BIT_FIREBALL)) == 0) {
-            return;
-        }
+//        if ((catFixA & (BIT_PLAYER | BIT_FIREBALL)) == 0 && (catFixB & (BIT_PLAYER | BIT_FIREBALL)) == 0) {
+//            return;
+//        }
 
         if ((catFixA & BIT_PLAYER) == BIT_PLAYER) {
             player = (Entity) bodyA.getUserData();
@@ -46,6 +62,13 @@ public class WorldContactListener implements ContactListener {
             fireball = (Entity) bodyA.getUserData();
         } else if ((catFixB & BIT_FIREBALL) == BIT_FIREBALL) {
             fireball = (Entity) bodyB.getUserData();
+        }
+
+
+        if ((catFixA & BIT_ENEMY_FIREBALL) == BIT_ENEMY_FIREBALL) {
+            enemyFireball = (Entity) bodyA.getUserData();
+        } else if ((catFixB & BIT_ENEMY_FIREBALL) == BIT_ENEMY_FIREBALL) {
+            enemyFireball = (Entity) bodyB.getUserData();
         }
 
         // Sprawdzenie kontaktu z graczem
@@ -60,9 +83,40 @@ public class WorldContactListener implements ContactListener {
                     listener.PlayerCollision(player, gameObject);
                 }
             }
+
+            if ((catFixA & BIT_ENTRANCE) == BIT_ENTRANCE) {
+                entrance = (Entity) bodyA.getUserData();
+            } else if ((catFixB & BIT_ENTRANCE) == BIT_ENTRANCE) {
+                entrance = (Entity) bodyB.getUserData();
+            }
+            if (entrance != null) {
+                for (final EntranceCollisionListener listener : entranceCollisionListeners) {
+                    listener.EnterToRoom(entrance);
+                }
+            }
+
+            if (enemyFireball != null) {
+                for (final EnemyFireballCollisionListener listener : enemyFireballCollisionListeners) {
+                    listener.FireballWithPlayer(enemyFireball, player);
+                }
+            }
         }
 
-        // Sprawdzenie kontaktu z ognistą kulą
+        if (enemyFireball != null) {
+            if ((catFixA & BIT_GROUND) == BIT_GROUND) {
+                for (final EnemyFireballCollisionListener listener : enemyFireballCollisionListeners) {
+                    listener.FireballCollisionWithGround(enemyFireball);
+                }
+            } else if ((catFixB & BIT_GROUND) == BIT_GROUND) {
+                for (final EnemyFireballCollisionListener listener : enemyFireballCollisionListeners) {
+                    listener.FireballCollisionWithGround(enemyFireball);
+                }
+            }
+        }
+
+
+
+            // Sprawdzenie kontaktu z ognistą kulą
         if (fireball != null) {
             if ((catFixA & BIT_GROUND) == BIT_GROUND || (catFixB & BIT_GROUND) == BIT_GROUND) {
                 for (final FireballCollisionListener listener : fireballListeners) {
@@ -77,6 +131,16 @@ public class WorldContactListener implements ContactListener {
                 gameObject = (Entity) bodyB.getUserData();
                 for (final FireballCollisionListener listener : fireballListeners) {
                     listener.FireballCollision(fireball, gameObject);
+                }
+            }else if ((catFixB & BIT_ENEMY) == BIT_ENEMY) {
+                gameObject = (Entity) bodyB.getUserData();
+                for (final FireballCollisionListener listener : fireballListeners) {
+                    listener.FireballWithEnemy(fireball, gameObject);
+                }
+            }else if ((catFixA & BIT_ENEMY) == BIT_ENEMY) {
+                gameObject = (Entity) bodyA.getUserData();
+                for (final FireballCollisionListener listener : fireballListeners) {
+                    listener.FireballWithEnemy(fireball, gameObject);
                 }
             }
         }
@@ -112,5 +176,18 @@ public class WorldContactListener implements ContactListener {
     public interface FireballCollisionListener{
         void FireballCollision(final Entity fireball, final Entity contact);
         void FireballCollisionWithGround(final Entity fireball);
+
+        void FireballWithEnemy(Entity fireball, Entity gameObject);
+    }
+
+    public interface EnemyFireballCollisionListener{
+        void FireballCollisionWithGround(final Entity fireball);
+
+        void FireballWithPlayer(Entity fireball, Entity player);
+    }
+
+    public interface EntranceCollisionListener{
+        void EnterToRoom(Entity entrance);
+
     }
 }
